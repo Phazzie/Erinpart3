@@ -1,0 +1,61 @@
+<div class="flex items-center justify-center min-h-screen p-4 animate-[aurora_15s_ease_infinite_alternate]">
+  <div class="w-full max-w-md p-8 space-y-8 bg-brand-secondary/30 rounded-2xl shadow-2xl shadow-cyan-500/20 backdrop-blur-md border border-cyan-700/50">
+    <div class="text-center">
+      <h1 class="font-display text-4xl font-bold tracking-wider text-brand-light sm:text-5xl drop-shadow-[0_2px_2px_rgba(6,182,212,0.8)]">
+        Erin's Escapades
+      </h1>
+      <p class="mt-4 text-lg text-cyan-200">
+        Plan your next adventure, one task at a time.
+      </p>
+    </div>
+
+    <form (ngSubmit)="joinSession()" class="space-y-6">
+      <div>
+        <label for="session-id" class="block text-sm font-medium text-cyan-200">Join a Session</label>
+        <div class="mt-2 flex rounded-md shadow-sm">
+          <span class="inline-flex items-center px-3 text-gray-400 bg-gray-800 border border-r-0 border-gray-600 rounded-l-md">
+            /s/
+          </span>
+          <input
+            type="text"
+            id="session-id"
+            name="session-id"
+            class="block w-full min-w-0 flex-1 rounded-none rounded-r-md bg-gray-900/50 border-gray-600 text-brand-light placeholder-gray-500 focus:ring-2 focus:ring-brand-accent focus:border-brand-accent uppercase"
+            placeholder="ABC123"
+            [ngModel]="sessionId()"
+            (ngModelChange)="sessionId.set($event.toUpperCase())"
+            maxlength="6"
+            minlength="6"
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="!isSessionIdValid()"
+        class="flex w-full justify-center rounded-md border border-transparent bg-brand-accent py-3 px-4 text-sm font-semibold text-brand-primary shadow-lg shadow-brand-accent/30 hover:bg-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-brand-primary disabled:bg-gray-600 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300"
+      >
+        Join Session
+      </button>
+    </form>
+
+    <div class="relative">
+      <div class="absolute inset-0 flex items-center">
+        <div class="w-full border-t border-gray-600"></div>
+      </div>
+      <div class="relative flex justify-center text-sm">
+        <span class="px-2 bg-brand-secondary text-gray-400">or</span>
+      </div>
+    </div>
+
+    <button
+      (click)="createNewSession()"
+      class="group flex w-full items-center justify-center gap-2 rounded-md border border-cyan-700 bg-transparent py-3 px-4 text-sm font-semibold text-brand-light shadow-sm hover:bg-brand-secondary/80 hover:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-brand-primary transition-colors"
+    >
+       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-cyan-400 group-hover:text-cyan-200 transition-colors">
+        <path fill-rule="evenodd" d="M9.653 2.146a.75.75 0 0 1 .694 0l2.25 1.125a.75.75 0 0 0 .53.046l2.528-.422a.75.75 0 0 1 .865.865l-.422 2.528a.75.75 0 0 0 .046.53l1.125 2.25a.75.75 0 0 1 0 .694l-1.125 2.25a.75.75 0 0 0-.046.53l.422 2.528a.75.75 0 0 1-.865.865l-2.528-.422a.75.75 0 0 0-.53.046l-2.25 1.125a.75.75 0 0 1-.694 0l-2.25-1.125a.75.75 0 0 0-.53-.046l-2.528.422a.75.75 0 0 1-.865-.865l.422-2.528a.75.75 0 0 0-.046-.53L2.146 10.347a.75.75 0 0 1 0-.694l1.125-2.25a.75.75 0 0 0 .046-.53l-.422-2.528a.75.75 0 0 1 .865-.865l2.528.422a.75.75 0 0 0 .53-.046l2.25-1.125ZM10 5.112a.75.75 0 0 1 .75.75v2.25H13a.75.75 0 0 1 0 1.5h-2.25v2.25a.75.75 0 0 1-1.5 0V9.612H7a.75.75 0 0 1 0-1.5h2.25V5.862a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
+      </svg>
+      Create a New Session
+    </button>
+  </div>
+</div>

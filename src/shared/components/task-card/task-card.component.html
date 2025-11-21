@@ -1,0 +1,70 @@
+@if (task(); as task) {
+  <div 
+    class="p-4 rounded-lg border flex justify-between items-start gap-4 transition-all duration-300 group hover:border-brand-accent/80 hover:shadow-lg hover:shadow-brand-accent/10 hover:-translate-y-1"
+    [class.bg-cyan-950/50]="!isRevealed()"
+    [class.bg-cyan-900/70]="isRevealed()"
+    [class.border-cyan-800/80]="!isRevealed()"
+    [class.border-cyan-700]="isRevealed()"
+  >
+    <div class="flex-1 min-w-0 flex items-start gap-3">
+      <div class="flex-shrink-0 pt-1">
+        @if (task.isSecret) {
+          @if (isRevealed()) {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400" title="Revealed Secret Task">
+              <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd" />
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-yellow-400" title="Secret Task">
+              <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm-2.25 8V5.5a2.25 2.25 0 0 1 4.5 0V9h-4.5Z" clip-rule="evenodd" />
+            </svg>
+          }
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-cyan-400" title="Public Task">
+            <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+            <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.18l.82-1.425a1.651 1.651 0 0 1 1.432-.825l1.816-.21a1.651 1.651 0 0 1 1.28.51l1.11 1.11a1.651 1.651 0 0 1 1.64 0l1.11-1.11a1.651 1.651 0 0 1 1.28-.51l1.816.21a1.651 1.651 0 0 1 1.432.825l.82 1.425a1.651 1.651 0 0 1 0 1.18l-.82 1.425a1.651 1.651 0 0 1-1.432.825l-1.816.21a1.651 1.651 0 0 1-1.28-.51l-1.11-1.11a1.651 1.651 0 0 1-1.64 0l-1.11 1.11a1.651 1.651 0 0 1-1.28.51l-1.816-.21a1.651 1.651 0 0 1-1.432-.825l-.82-1.425ZM5.12 10.59a1.651 1.651 0 0 1 0-1.18l.82-1.425a1.651 1.651 0 0 1 1.432-.825l1.816-.21a1.651 1.651 0 0 1 1.28.51l1.11 1.11a1.651 1.651 0 0 1 1.64 0l1.11-1.11a1.651 1.651 0 0 1 1.28-.51l1.816.21a1.651 1.651 0 0 1 1.432.825l.82 1.425a1.651 1.651 0 0 1 0 1.18l-.82 1.425a1.651 1.651 0 0 1-1.432.825l-1.816.21a1.651 1.651 0 0 1-1.28-.51l-1.11-1.11a1.651 1.651 0 0 1-1.64 0l-1.11 1.11a1.651 1.651 0 0 1-1.28.51l-1.816-.21a1.651 1.651 0 0 1-1.432-.825l-.82-1.425Z" clip-rule="evenodd" />
+          </svg>
+        }
+      </div>
+      <div class="flex-1 min-w-0">
+        @if (isRevealed()) {
+          <p class="text-brand-light break-words whitespace-pre-wrap animate-[fadeIn_0.5s_ease-in-out]">{{ task.content }}</p>
+        } @else {
+          <div class="relative w-full h-8 overflow-hidden rounded-md bg-cyan-950/50">
+            <div class="absolute inset-0 bg-transparent opacity-10 animate-shimmer" style="background: linear-gradient(90deg, transparent, rgba(207, 250, 254, 0.5), transparent)"></div>
+            <p class="text-transparent font-mono tracking-widest select-none">••••••••••••••••••••</p>
+          </div>
+        }
+        <p class="text-xs text-cyan-400/60 mt-2">
+          {{ task.createdAt | date:'short' }}
+        </p>
+      </div>
+    </div>
+
+    @if (task.isSecret && !isRevealed()) {
+      <button 
+        (click)="onRevealClick()"
+        [disabled]="!canVote()"
+        class="flex-shrink-0 px-4 py-2 text-sm font-semibold rounded-md transition-all duration-300 flex items-center gap-2"
+        [class.bg-yellow-500]="canVote()"
+        [class.text-yellow-950]="canVote()"
+        [class.hover:bg-yellow-400]="canVote()"
+        [class.animate-glow]="canVote()"
+        [class.bg-gray-700/50]="!canVote()"
+        [class.text-gray-400]="!canVote()"
+        [class.cursor-not-allowed]="!canVote()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+          <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.18l.82-1.425a1.651 1.651 0 0 1 1.432-.825l1.816-.21a1.651 1.651 0 0 1 1.28.51l1.11 1.11a1.651 1.651 0 0 1 1.64 0l1.11-1.11a1.651 1.651 0 0 1 1.28-.51l1.816.21a1.651 1.651 0 0 1 1.432.825l.82 1.425a1.651 1.651 0 0 1 0 1.18l-.82 1.425a1.651 1.651 0 0 1-1.432.825l-1.816.21a1.651 1.651 0 0 1-1.28-.51l-1.11-1.11a1.651 1.651 0 0 1-1.64 0l-1.11 1.11a1.651 1.651 0 0 1-1.28.51l-1.816-.21a1.651 1.651 0 0 1-1.432-.825l-.82-1.425Z" clip-rule="evenodd" />
+        </svg>
+        <span>Reveal ({{ revealProgress() }})</span>
+      </button>
+    }
+  </div>
+}
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

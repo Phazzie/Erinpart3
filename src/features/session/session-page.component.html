@@ -1,0 +1,108 @@
+<div class="min-h-screen p-4 sm:p-6 lg:p-8">
+  <div class="max-w-4xl mx-auto">
+    
+    <header class="flex items-center justify-between mb-8 pb-4 border-b-2 border-cyan-800/50">
+      <a routerLink="/" class="text-brand-accent hover:text-cyan-300 transition-colors flex items-center gap-2 group">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 transition-transform group-hover:-translate-x-1">
+          <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+        </svg>
+        Back to Home
+      </a>
+      <div class="flex items-center gap-4">
+        <button (click)="toggleShareModal()" class="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-md transition-all duration-300 bg-brand-secondary hover:bg-cyan-700 text-brand-light">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+            <path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h3A1.5 1.5 0 0 1 13 3.5v1.586a2 2 0 0 1-.586 1.414l-4.828 4.828a2 2 0 0 1-1.414.586H3.5A1.5 1.5 0 0 1 2 10.5v-3A1.5 1.5 0 0 1 3.5 6H7V3.5ZM9 5V3.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5V5h4ZM3.5 7a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3.586a.5.5 0 0 0 .354-.146l4.828-4.828A.5.5 0 0 0 12 6.414V5h-1.5A1.5 1.5 0 0 1 9 3.5V3h-3v4h-.5Z" />
+            <path d="M16.5 6a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-1.086a2 2 0 0 1-1.414-.586L9.172 7.586A2 2 0 0 1 9.758 6H16.5ZM15 8.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3Z" />
+          </svg>
+          <span>Share</span>
+        </button>
+        <div class="text-right">
+          <h1 class="text-xl font-bold text-brand-light">Session ID</h1>
+          <p class="font-display text-2xl text-brand-accent tracking-widest">{{ sessionId() }}</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="bg-brand-secondary/30 rounded-lg p-6 border border-cyan-800 shadow-lg mb-8">
+      <h2 class="text-lg font-semibold mb-3 text-cyan-200">Add a New Task</h2>
+      <form (ngSubmit)="addTask()" class="space-y-4">
+        <textarea
+          class="w-full bg-cyan-950/70 border border-cyan-800 rounded-md p-3 text-brand-light placeholder-cyan-400/50 focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition"
+          rows="3"
+          placeholder="e.g., Secure the cosmic key from Planet X"
+          [ngModel]="newTaskContent()"
+          (ngModelChange)="newTaskContent.set($event)"
+          name="newTaskContent"
+          required
+        ></textarea>
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer text-cyan-200">
+            <input 
+              type="checkbox"
+              class="w-5 h-5 rounded bg-cyan-900 border-cyan-700 text-brand-accent focus:ring-brand-accent"
+              [ngModel]="isNewTaskSecret()"
+              (ngModelChange)="isNewTaskSecret.set($event)"
+              name="isNewTaskSecret"
+            />
+            Make this task secret
+          </label>
+          <button 
+            type="submit"
+            [disabled]="!newTaskContent().trim()"
+            class="px-6 py-2 bg-brand-accent text-brand-primary font-bold rounded-md hover:bg-cyan-400 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed shadow-md hover:shadow-lg shadow-brand-accent/30 hover:shadow-brand-accent/40"
+          >
+            Add Task
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div>
+      <h2 class="text-xl font-bold mb-4 text-cyan-200">Mission Board</h2>
+      @if (taskService.isLoading()) {
+        <p class="text-center text-cyan-300 animate-pulse">Loading tasks...</p>
+      } @else {
+        @if (taskService.tasks().length === 0) {
+          <div class="text-center py-10 px-4 bg-brand-secondary/30 rounded-lg border-2 border-dashed border-brand-accent/30">
+             <svg class="mx-auto h-16 w-16 text-cyan-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14.425 2.375a2.05 2.05 0 0 0-1.85-1.85C11.393.188 10.46 0 9.375 0 6.663 0 4.5 2.163 4.5 4.875c0 1.085.188 2.018.525 2.94-1.292 1.22-2.88 2.8-2.88 4.68 0 .414.336.75.75.75s.75-.336.75-.75c0-1.077 1.02-2.288 2.03-3.262.32.72.763 1.393 1.306 2.003-1.63 1.488-3.528 3.19-3.528 5.498 0 .414.336.75.75.75s.75-.336.75-.75c0-1.483 1.15-2.863 2.508-4.148.618.619 1.292 1.162 2.004 1.605-1.22 1.293-2.8 2.88-3.263 2.03.72.32 1.393.763 2.003 1.306-1.488 1.63-3.19 3.528-5.498 3.528.414 0 .75.336.75.75s-.336.75-.75.75c-2.712 0-4.875-2.163-4.875-4.875 0-1.085.188-2.018.525-2.94C1.293 13.065 0 11.475 0 9.593c0-2.3 1.898-4.198 4.2-4.198.39 0 .77.047 1.14.136C5.815 4.815 6.46 4.17 7.23 3.694 6.64 2.895 6.255 2.018 6.255 1.125 6.255.418 6.67.003 7.125.003c.454 0 .87.415.87.87 0 .765-.303 1.485-.802 2.03.715.343 1.37.793 1.95 1.335.58-.542 1.235-.992 1.95-1.335C10.598 2.458 10.295 1.738 10.295.978c0-.455.415-.87.87-.87.455 0 .87.415.87.87 0 .855-.385 1.733-.975 2.323.57.486 1.05.975 1.5 1.425.45-.45.93-.94 1.425-1.5.588-.589.973-1.468.973-2.323 0-.455.415-.87.87-.87s.87.415.87.87c0 .76-.303 1.48-.802 2.03.715.343 1.37.793 1.95 1.335.58-.542 1.235-.992 1.95-1.335C16.853 2.458 16.55 1.738 16.55.978c0-.455.415-.87.87-.87.455 0 .87.415.87.87 0 .855-.385 1.733-.975 2.323.57.486 1.05.975 1.5 1.425C19.245 4.2 19.625 3.75 20.125 3.328c-.49-.542-.802-1.268-.802-2.03 0-.455.415-.87.87-.87s.87.415.87.87c0 .765-.303 1.485-.802 2.03.715.343 1.37.793 1.95 1.335C21.79 4.815 22.435 4.17 23.205 3.694c.59.8.975 1.678.975 2.571 0 .69-.21 1.35-.615 1.95.39.09.75.135 1.14.135 2.303 0 4.2-1.898 4.2-4.198 0-1.883-1.293-3.473-3.14-4.048.337-.923.525-1.855.525-2.825 0-2.712-2.163-4.875-4.875-4.875-1.085 0-2.018.188-2.94.525C15.815 1.293 14.225 0 12.338 0c-.414 0-.75.336-.75.75s.336.75.75.75c1.077 0 2.288 1.02 3.263 2.03-.72-.32-1.393-.763-2.003-1.306C12.16 2.96 10.47 1.473 9.008.003c-.414 0-.75.336-.75.75s.336.75.75.75c1.483 1.15 2.863 2.508 4.148 2.508.619-.618 1.162-1.292 1.605-2.004-1.293-.72-2.88-.32-2.03-2.03.32-.72.763-1.393 1.306-2.003C9.28 1.15 7.9 2.508 6.54 2.508c-.619-.618-1.162-1.292-1.605-2.004C6.155 1.725 7.025 2.57 7.74 3.338c.675-.715.82-1.74.225-2.583-.595-.843-1.62-.99-2.583-.225-.768.614-1.793.47-2.583-.225-.843-.595-.99-1.62-.225-2.583.614-.768.47-1.793-.225-2.583C1.755.045.73.19.135.96.045 1.555.19 2.58.96 3.348c.614.768.47 1.793-.225 2.583-.843.595-.99 1.62-.225 2.583.595.843 1.62.99 2.583.225.768-.614 1.793-.47 2.583.225.843.595.99 1.62.225 2.583-.595.843-1.62.99-2.583.225-.768.614-1.793.47-2.583-.225C1.16 11.23.003 10.418.003 9.593c0-1.042.848-1.89 1.89-1.89.465 0 .905.172 1.245.45.69.562 1.68.448 2.22-.225.542-.675.428-1.665-.225-2.22-.328-.263-.72-.42-1.14-.42-1.27 0-2.31 1.04-2.31 2.31 0 .99.638 1.845 1.56 2.19.045.015.09.03.135.045.69.255 1.125.93 1.035 1.635-.075.705-.69 1.23-1.395 1.23h-.03c-.015 0-.03.015-.045.015-1.215.195-2.115 1.2-2.115 2.43 0 1.35 1.11 2.46 2.46 2.46 1.08 0 2.01-.705 2.34-1.695.345-.225.75-.33 1.155-.33.39 0 .765.105 1.095.3.36.21.78.315 1.2.315.69 0 1.35-.255 1.86-.735.615-.585.99-1.425.99-2.325 0-1.785-1.485-3.27-3.27-3.27a.75.75 0 0 0 0 1.5c.975 0 1.77.795 1.77 1.77 0 .615-.315 1.185-.825 1.5-.39.24-.87.375-1.365.375-.24 0-.48-.045-.705-.135C15.19 15.6 15 15.285 15 14.925c0-.945.765-1.71 1.71-1.71.375 0 .735.12 1.02.33.315.24.705.375 1.11.375.645 0 1.245-.255 1.695-.705.495-.495.78-1.17.78-1.875 0-1.44-1.17-2.61-2.61-2.61a.75.75 0 0 0 0 1.5c.615 0 1.11.495 1.11 1.11 0 .39-.195.75-.525.945-.255.15-.555.225-.855.225-.21 0-.42-.045-.615-.12-.345-.135-.72-.21-1.11-.21-.855 0-1.65.345-2.22.915-.585.57-1.35.885-2.145.885-1.65 0-3-1.35-3-3s1.35-3 3-3c.57 0 1.11.165 1.575.45.18.105.375.195.57.255.45.15.93.225 1.41.225.84 0 1.635-.345 2.205-.915.57-.57.885-1.335.885-2.13 0-1.65-1.35-3-3-3a.75.75 0 0 0 0 1.5c.825 0 1.5.675 1.5 1.5s-.675 1.5-1.5 1.5c-.3 0-.585-.09-.84-.255-.24-.15-.51-.225-.795-.225-.54 0-1.05.21-1.425.585-.39.375-.915.585-1.455.585-1.245 0-2.25-1.005-2.25-2.25s1.005-2.25 2.25-2.25c.345 0 .675.075.975.225.285.135.6.225.93.225.495 0 .975-.195 1.32-.54.36-.36.84-.54 1.335-.54.96 0 1.755.795 1.755 1.755a.75.75 0 0 0 1.5 0c0-1.785-1.47-3.255-3.255-3.255-1.065 0-2.01.51-2.625 1.29-.615-.78-1.56-1.29-2.625-1.29-1.455 0-2.73 1.005-3.135 2.37Z" />
+            </svg>
+            <p class="mt-4 text-lg font-semibold text-cyan-300">Lift Off!</p>
+            <p class="text-cyan-400">Your mission board is clear. Add the first task to begin.</p>
+          </div>
+        } @else {
+          <div class="space-y-4">
+            @for (task of taskService.tasks(); track task.id) {
+              <app-task-card [task]="task" [currentUserId]="currentUser()?.id || ''" (reveal)="handleReveal($event)" />
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  @if (isShareModalOpen()) {
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-[fadeIn_0.3s_ease-out]" (click)="toggleShareModal()">
+      <div class="bg-brand-secondary rounded-2xl shadow-2xl shadow-cyan-500/20 border border-cyan-700/50 p-6 sm:p-8 w-full max-w-sm m-4 text-center" (click)="$event.stopPropagation()">
+        <h2 class="font-display text-2xl font-bold text-brand-light">Share Session</h2>
+        <p class="mt-2 text-cyan-300">Invite others with this QR code or link.</p>
+        <div class="my-6 p-4 bg-brand-primary rounded-lg inline-block ring-2 ring-brand-accent/50">
+          <canvas #qrCanvas width="256" height="256"></canvas>
+        </div>
+        <div class="flex items-center bg-cyan-950/70 border border-cyan-800 rounded-md">
+          <input type="text" [value]="sessionUrl()" readonly class="w-full bg-transparent p-3 text-cyan-300 text-sm truncate">
+          <button (click)="copyLink()" class="flex-shrink-0 px-4 py-3 bg-brand-accent text-brand-primary font-bold rounded-md m-1 hover:bg-cyan-400 transition-all text-sm w-28">
+            {{ copyButtonText() }}
+          </button>
+        </div>
+        <button (click)="toggleShareModal()" class="mt-6 text-cyan-300 hover:text-white transition-colors text-sm">Close</button>
+      </div>
+    </div>
+  }
+</div>
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+</style>

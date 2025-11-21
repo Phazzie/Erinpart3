@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Erin's Escapades</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Orbitron', 'sans-serif'],
+          },
+          colors: {
+            'brand-primary': '#083344', // cyan-950
+            'brand-secondary': '#164e63', // cyan-800
+            'brand-accent': '#06b6d4', // cyan-500
+            'brand-light': '#cffafe', // cyan-50
+          },
+          keyframes: {
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' },
+            },
+            glow: {
+              '0%, 100%': { boxShadow: '0 0 5px #06b6d4, 0 0 10px #06b6d4' },
+              '50%': { boxShadow: '0 0 20px #06b6d4, 0 0 30px #06b6d4' },
+            },
+          },
+          animation: {
+            shimmer: 'shimmer 2.5s infinite linear',
+            glow: 'glow 2.5s ease-in-out infinite',
+          },
+        }
+      }
+    }
+  </script>
+<script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://aistudiocdn.com/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://aistudiocdn.com/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://aistudiocdn.com/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://aistudiocdn.com/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://aistudiocdn.com/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://aistudiocdn.com/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@angular/forms": "https://next.esm.sh/@angular/forms@^21.0.0?external=rxjs",
+    "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^21.0.0?external=rxjs",
+    "@angular/common": "https://next.esm.sh/@angular/common@^21.0.0?external=rxjs",
+    "@angular/compiler": "https://next.esm.sh/@angular/compiler@^21.0.0?external=rxjs",
+    "@angular/router": "https://next.esm.sh/@angular/router@^21.0.0?external=rxjs",
+    "@angular/core": "https://next.esm.sh/@angular/core@^21.0.0?external=rxjs",
+    "@angular/core/rxjs-interop": "https://next.esm.sh/@angular/core@^21.0.0/rxjs-interop?external=rxjs"
+  }
+}
+</script>
+</head>
+<body class="bg-brand-primary text-brand-light font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900 via-brand-primary to-brand-primary">
+  <app-root></app-root>
+</body>
+</html>
