@@ -1,5 +1,5 @@
 
-import { z } from 'https://cdn.jsdelivr.net/npm/zod@3.23.8/+esm';
+import { z } from 'zod';
 
 export const TaskSchema = z.object({
   id: z.string().uuid(),
