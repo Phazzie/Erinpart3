@@ -7,6 +7,7 @@ import { Task } from '../models/task';
 import { TaskStore } from '../ports/task-store.provider';
 import { SyncBus } from '../ports/sync-bus.provider';
 import { AuthProvider } from '../ports/auth.provider';
+import { LoggerService } from './logger.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,6 +16,7 @@ export class TaskService {
   private taskStore = inject(TaskStore);
   private syncBus = inject(SyncBus);
   private authProvider = inject(AuthProvider);
+  private logger = inject(LoggerService);
 
   readonly sessionId = signal<string | null>(null);
 
@@ -25,7 +27,7 @@ export class TaskService {
         map(tasks => ({ loading: false, tasks, error: null })),
         startWith({ loading: true, tasks: [], error: null }),
         catchError(error => {
-          console.error('Error watching tasks:', error);
+          this.logger.error('Error watching tasks', error);
           return of({ loading: false, tasks: [], error });
         })
       ))
@@ -33,11 +35,11 @@ export class TaskService {
     { initialValue: { loading: true, tasks: [], error: null } }
   );
 
-  readonly tasks = computed(() => 
+  readonly tasks = computed(() =>
     this.tasksState().tasks.slice().sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
   );
   readonly isLoading = computed(() => this.tasksState().loading);
-  
+
   async addTask(content: string, isSecret: boolean): Promise<void> {
     const currentSessionId = this.sessionId();
     const user = this.authProvider.currentUser();
@@ -57,7 +59,7 @@ export class TaskService {
       await this.taskStore.save(newTask);
       this.syncBus.publish({ type: 'task-update', payload: { sessionId: currentSessionId } });
     } catch (e) {
-      console.error('Failed to add task:', e);
+      this.logger.error('Failed to add task', e);
     }
   }
 
@@ -76,7 +78,7 @@ export class TaskService {
       await this.taskStore.save(updatedTask);
       this.syncBus.publish({ type: 'task-update', payload: { sessionId: currentSessionId } });
     } catch (e) {
-      console.error('Failed to update task for reveal:', e);
+      this.logger.error('Failed to update task for reveal', e);
     }
   }
 }
