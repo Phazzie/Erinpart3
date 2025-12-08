@@ -15,4 +15,7 @@ export const environment = {
     idLength: 6,
     idPattern: /^[A-Z0-9]{6}$/,
   },
+  ui: {
+    copyFeedbackDuration: 2000,
+  },
 };

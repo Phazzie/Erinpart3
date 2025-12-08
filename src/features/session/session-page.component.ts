@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { map } from 'rxjs/operators';
@@ -20,8 +20,9 @@ import { LoggerService } from '../../core/services/logger.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, RouterLink, TaskCardComponent],
 })
-export class SessionPageComponent {
+export class SessionPageComponent implements OnDestroy {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private authProvider = inject(AuthProvider);
   private clipboard = inject(ClipboardProvider);
   private windowProvider = inject(WindowProvider);
@@ -29,10 +30,22 @@ export class SessionPageComponent {
   private logger = inject(LoggerService);
   taskService = inject(TaskService);
 
+  private copyTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
   @ViewChild('qrCanvas') qrCanvas: ElementRef<HTMLCanvasElement> | undefined;
 
   sessionId = toSignal(
-    this.route.paramMap.pipe(map(params => params.get('sessionId')!))
+    this.route.paramMap.pipe(
+      map(params => {
+        const id = params.get('sessionId');
+        if (!id || !this.config.session.idPattern.test(id)) {
+          this.logger.warn('Invalid session ID, redirecting to home');
+          this.router.navigate(['/']);
+          return null;
+        }
+        return id;
+      })
+    )
   );
 
   currentUser = this.authProvider.currentUser;
@@ -43,7 +56,9 @@ export class SessionPageComponent {
   isShareModalOpen = signal(false);
   sessionUrl = computed(() => {
     const baseUrl = this.windowProvider.getLocationHref().split('#')[0];
-    return `${baseUrl}#/s/${this.sessionId()}`;
+    const id = this.sessionId();
+    if (!id) return baseUrl;
+    return `${baseUrl}#/s/${encodeURIComponent(id)}`;
   });
   copyButtonText = signal('Copy Link');
 
@@ -54,40 +69,64 @@ export class SessionPageComponent {
 
     effect(() => {
       if (this.isShareModalOpen() && this.qrCanvas?.nativeElement && this.sessionId()) {
-        const qrConfig = this.config.qrCode;
-        QRCode.toCanvas(this.qrCanvas.nativeElement, this.sessionUrl(), {
-          width: qrConfig.width,
-          margin: qrConfig.margin,
-          color: {
-            dark: qrConfig.colorLight,
-            light: qrConfig.colorDark
-          }
-        });
+        try {
+          const qrConfig = this.config.qrCode;
+          QRCode.toCanvas(this.qrCanvas.nativeElement, this.sessionUrl(), {
+            width: qrConfig.width,
+            margin: qrConfig.margin,
+            color: {
+              dark: qrConfig.colorDark,
+              light: qrConfig.colorLight
+            }
+          });
+        } catch (error) {
+          this.logger.error('Failed to generate QR code', error);
+        }
       }
     });
   }
 
-  async addTask() {
-    await this.taskService.addTask(this.newTaskContent(), this.isNewTaskSecret());
-    this.newTaskContent.set('');
-    this.isNewTaskSecret.set(false);
+  ngOnDestroy(): void {
+    if (this.copyTimeoutId) {
+      clearTimeout(this.copyTimeoutId);
+    }
   }
 
-  handleReveal(task: Task) {
-    this.taskService.revealTask(task);
+  async addTask(): Promise<void> {
+    try {
+      await this.taskService.addTask(this.newTaskContent(), this.isNewTaskSecret());
+      this.newTaskContent.set('');
+      this.isNewTaskSecret.set(false);
+    } catch (error) {
+      this.logger.error('Failed to add task', error);
+    }
   }
 
-  toggleShareModal() {
+  async handleReveal(task: Task): Promise<void> {
+    try {
+      await this.taskService.revealTask(task);
+    } catch (error) {
+      this.logger.error('Failed to reveal task', error);
+    }
+  }
+
+  toggleShareModal(): void {
     this.isShareModalOpen.update(v => !v);
     if (!this.isShareModalOpen()) {
       this.copyButtonText.set('Copy Link');
     }
   }
 
-  copyLink() {
+  copyLink(): void {
     this.clipboard.writeText(this.sessionUrl()).then(() => {
       this.copyButtonText.set('Copied!');
-      setTimeout(() => this.copyButtonText.set('Copy Link'), this.config.ui.copyFeedbackDuration);
+      if (this.copyTimeoutId) {
+        clearTimeout(this.copyTimeoutId);
+      }
+      this.copyTimeoutId = setTimeout(() => {
+        this.copyButtonText.set('Copy Link');
+        this.copyTimeoutId = null;
+      }, this.config.ui.copyFeedbackDuration);
     }).catch(err => {
       this.logger.error('Failed to copy to clipboard', err);
     });

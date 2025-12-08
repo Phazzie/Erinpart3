@@ -1,10 +1,9 @@
-
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, filter } from 'rxjs';
 import { SyncBus, SyncMessage } from '../../core/ports/sync-bus.provider';
 
 @Injectable({ providedIn: 'root' })
-export class BroadcastChannelBus implements SyncBus {
+export class BroadcastChannelBus implements SyncBus, OnDestroy {
   private channels: Map<string, BroadcastChannel> = new Map();
 
   private getChannel(name: string): BroadcastChannel {
@@ -22,7 +21,7 @@ export class BroadcastChannelBus implements SyncBus {
   subscribe(channelId: string): Observable<SyncMessage> {
     const channelName = `session-${channelId}`;
     const channel = this.getChannel(channelName);
-    
+
     return new Observable<SyncMessage>(subscriber => {
       const handler = (event: MessageEvent) => {
         subscriber.next(event.data);
@@ -32,5 +31,19 @@ export class BroadcastChannelBus implements SyncBus {
     }).pipe(
       filter(msg => msg?.payload?.sessionId === channelId)
     );
+  }
+
+  closeChannel(sessionId: string): void {
+    const channelName = `session-${sessionId}`;
+    const channel = this.channels.get(channelName);
+    if (channel) {
+      channel.close();
+      this.channels.delete(channelName);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.channels.forEach(channel => channel.close());
+    this.channels.clear();
   }
 }

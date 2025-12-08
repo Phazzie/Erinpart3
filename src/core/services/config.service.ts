@@ -26,6 +26,6 @@ export class ConfigService {
   };
 
   readonly ui = {
-    copyFeedbackDuration: 2000,
+    copyFeedbackDuration: environment.ui.copyFeedbackDuration,
   };
 }
