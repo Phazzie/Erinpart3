@@ -1,15 +1,47 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { GuestAuthProvider } from './guest-auth.provider';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const GUEST_USER_KEY = 'erins-escapades-guest-user';
 
+// Mock storage
+const mockStorage = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+};
+
+// Mock logger
+const mockLogger = {
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+};
+
+// Mock Angular inject
+vi.mock('@angular/core', async () => {
+  const actual = await vi.importActual('@angular/core');
+  return {
+    ...actual,
+    inject: vi.fn((token: any) => {
+      const tokenName = token?.name || token?.toString() || '';
+      if (tokenName.includes('StorageProvider')) return mockStorage;
+      if (tokenName.includes('LoggerService')) return mockLogger;
+      return null;
+    }),
+  };
+});
+
+import { GuestAuthProvider } from './guest-auth.provider';
+
 describe('GuestAuthProvider', () => {
   beforeEach(() => {
-    localStorage.clear();
+    vi.clearAllMocks();
+    mockStorage.getItem.mockReturnValue(null);
   });
 
   describe('initialization', () => {
-    it('should create new guest user when no user exists in localStorage', () => {
+    it('should create new guest user when no user exists in storage', () => {
+      mockStorage.getItem.mockReturnValue(null);
       const provider = new GuestAuthProvider();
 
       const user = provider.currentUser();
@@ -18,9 +50,9 @@ describe('GuestAuthProvider', () => {
       expect(user?.id).toBeTruthy();
     });
 
-    it('should restore existing user from localStorage', () => {
+    it('should restore existing user from storage', () => {
       const existingUser = { id: 'existing-uuid-123', name: 'Guest' };
-      localStorage.setItem(GUEST_USER_KEY, JSON.stringify(existingUser));
+      mockStorage.getItem.mockReturnValue(JSON.stringify(existingUser));
 
       const provider = new GuestAuthProvider();
 
@@ -29,6 +61,9 @@ describe('GuestAuthProvider', () => {
     });
 
     it('should preserve user ID across provider instances', () => {
+      const existingUser = { id: 'persistent-uuid', name: 'Guest' };
+      mockStorage.getItem.mockReturnValue(JSON.stringify(existingUser));
+
       const provider1 = new GuestAuthProvider();
       const user1 = provider1.currentUser();
 
@@ -39,6 +74,7 @@ describe('GuestAuthProvider', () => {
     });
 
     it('should generate unique ID for new users', () => {
+      mockStorage.getItem.mockReturnValue(null);
       const provider = new GuestAuthProvider();
 
       const user = provider.currentUser();
@@ -47,6 +83,7 @@ describe('GuestAuthProvider', () => {
     });
 
     it('should set name as Guest for new users', () => {
+      mockStorage.getItem.mockReturnValue(null);
       const provider = new GuestAuthProvider();
 
       const user = provider.currentUser();
@@ -54,31 +91,57 @@ describe('GuestAuthProvider', () => {
     });
   });
 
-  describe('localStorage handling', () => {
-    it('should handle corrupted localStorage data gracefully', () => {
-      localStorage.setItem(GUEST_USER_KEY, 'not-valid-json');
+  describe('storage handling', () => {
+    it('should handle corrupted storage data gracefully', () => {
+      mockStorage.getItem.mockReturnValue('not-valid-json');
 
       const provider = new GuestAuthProvider();
 
       const user = provider.currentUser();
       expect(user).not.toBeNull();
       expect(user?.name).toBe('Guest');
+      expect(mockLogger.error).toHaveBeenCalled();
     });
 
-    it('should persist user data to localStorage', () => {
+    it('should persist user data to storage', () => {
+      mockStorage.getItem.mockReturnValue(null);
       const provider = new GuestAuthProvider();
 
-      const stored = localStorage.getItem(GUEST_USER_KEY);
-      expect(stored).not.toBeNull();
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        GUEST_USER_KEY,
+        expect.stringContaining('"name":"Guest"')
+      );
+    });
 
-      const parsed = JSON.parse(stored!);
-      expect(parsed.name).toBe('Guest');
-      expect(parsed.id).toBeTruthy();
+    it('should handle structurally invalid user data from storage', () => {
+      // Valid JSON but missing required fields
+      const invalidUser = { id: 123, name: null };
+      mockStorage.getItem.mockReturnValue(JSON.stringify(invalidUser));
+
+      const provider = new GuestAuthProvider();
+      const user = provider.currentUser();
+
+      // Should create new user since structure is invalid
+      expect(user).not.toBeNull();
+      expect(user?.name).toBe('Guest');
+      expect(mockLogger.warn).toHaveBeenCalled();
+    });
+
+    it('should handle empty object in storage', () => {
+      mockStorage.getItem.mockReturnValue(JSON.stringify({}));
+
+      const provider = new GuestAuthProvider();
+      const user = provider.currentUser();
+
+      // Should create new user since structure is invalid
+      expect(user).not.toBeNull();
+      expect(user?.name).toBe('Guest');
     });
   });
 
   describe('initialize method', () => {
     it('should be callable multiple times without error', () => {
+      mockStorage.getItem.mockReturnValue(null);
       const provider = new GuestAuthProvider();
       expect(() => provider.initialize()).not.toThrow();
 
@@ -89,6 +152,7 @@ describe('GuestAuthProvider', () => {
 
   describe('signal reactivity', () => {
     it('should provide currentUser as a signal', () => {
+      mockStorage.getItem.mockReturnValue(null);
       const provider = new GuestAuthProvider();
 
       // Signal should be callable
@@ -97,6 +161,7 @@ describe('GuestAuthProvider', () => {
     });
 
     it('should allow setting currentUser via signal', () => {
+      mockStorage.getItem.mockReturnValue(null);
       const provider = new GuestAuthProvider();
 
       const newUser = { id: 'new-user-id', name: 'New User' };

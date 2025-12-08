@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from, of, switchMap, startWith } from 'rxjs';
+import { Observable, from, switchMap, startWith } from 'rxjs';
 import { Task, TaskSchema } from '../../core/models/task';
 import { TaskStore } from '../../core/ports/task-store.provider';
 import { SyncBus } from '../../core/ports/sync-bus.provider';
@@ -37,7 +37,7 @@ export class IndexedDbTaskStore implements TaskStore {
     const store = await this.getStore('readonly');
     const index = store.index('sessionId');
     const request = index.getAll(sessionId);
-    
+
     return new Promise((resolve, reject) => {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -48,10 +48,10 @@ export class IndexedDbTaskStore implements TaskStore {
   }
 
   async save(task: Task): Promise<void> {
-    TaskSchema.parse(task); // Validate before saving
+    TaskSchema.parse(task);
     const store = await this.getStore('readwrite');
     const request = store.put(task);
-    
+
     return new Promise<void>((resolve, reject) => {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve();
@@ -60,9 +60,9 @@ export class IndexedDbTaskStore implements TaskStore {
 
   watch(sessionId: string): Observable<Task[]> {
     const sync$ = this.syncBus.subscribe(sessionId);
-    
+
     return sync$.pipe(
-      startWith(null), // Emit immediately to load initial data
+      startWith(null),
       switchMap(() => from(this.list(sessionId)))
     );
   }

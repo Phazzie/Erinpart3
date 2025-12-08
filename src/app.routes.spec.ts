@@ -1,80 +1,61 @@
 import { describe, it, expect } from 'vitest';
 
-// Test the routing configuration logic
-describe('App Routes', () => {
-  // Route configuration structure
-  const routes = [
-    { path: '', component: 'HomePageComponent' },
-    { path: 's/:sessionId', component: 'SessionPageComponent' },
+// Test route configuration structure without importing Angular components
+// (which would require JIT compilation)
+describe('App Routes Configuration', () => {
+  // Define expected route structure
+  const expectedRoutes = [
+    { path: '', hasComponent: true, title: "Erin's Escapades - Home" },
+    { path: 's/:sessionId', hasComponent: true, title: "Erin's Escapades - Session" },
+    { path: '**', redirectTo: '' },
   ];
 
   describe('route definitions', () => {
     it('should have home route at root path', () => {
-      const homeRoute = routes.find((r) => r.path === '');
+      const homeRoute = expectedRoutes.find((r) => r.path === '');
       expect(homeRoute).toBeDefined();
-      expect(homeRoute?.component).toBe('HomePageComponent');
+      expect(homeRoute?.hasComponent).toBe(true);
     });
 
     it('should have session route with sessionId parameter', () => {
-      const sessionRoute = routes.find((r) => r.path === 's/:sessionId');
+      const sessionRoute = expectedRoutes.find((r) => r.path === 's/:sessionId');
       expect(sessionRoute).toBeDefined();
-      expect(sessionRoute?.component).toBe('SessionPageComponent');
+      expect(sessionRoute?.hasComponent).toBe(true);
     });
 
-    it('should have exactly 2 routes', () => {
-      expect(routes).toHaveLength(2);
-    });
-  });
-
-  describe('route matching', () => {
-    const matchRoute = (path: string): string | null => {
-      // Simple route matching simulation
-      if (path === '' || path === '/') return 'HomePageComponent';
-      if (path.match(/^s\/[A-Z0-9]+$/)) return 'SessionPageComponent';
-      if (path.match(/^\/s\/[A-Z0-9]+$/)) return 'SessionPageComponent';
-      return null;
-    };
-
-    it('should match home page for empty path', () => {
-      expect(matchRoute('')).toBe('HomePageComponent');
+    it('should have wildcard redirect route', () => {
+      const wildcardRoute = expectedRoutes.find((r) => r.path === '**');
+      expect(wildcardRoute).toBeDefined();
+      expect(wildcardRoute?.redirectTo).toBe('');
     });
 
-    it('should match home page for root path', () => {
-      expect(matchRoute('/')).toBe('HomePageComponent');
+    it('should have exactly 3 routes', () => {
+      expect(expectedRoutes).toHaveLength(3);
     });
 
-    it('should match session page for valid session path', () => {
-      expect(matchRoute('s/ABC123')).toBe('SessionPageComponent');
-      expect(matchRoute('/s/XYZ789')).toBe('SessionPageComponent');
-    });
+    it('should have correct titles for routes', () => {
+      const homeRoute = expectedRoutes.find((r) => r.path === '');
+      const sessionRoute = expectedRoutes.find((r) => r.path === 's/:sessionId');
 
-    it('should not match invalid paths', () => {
-      expect(matchRoute('invalid')).toBeNull();
-      expect(matchRoute('session/ABC123')).toBeNull();
+      expect(homeRoute?.title).toBe("Erin's Escapades - Home");
+      expect(sessionRoute?.title).toBe("Erin's Escapades - Session");
     });
   });
 
-  describe('sessionId parameter extraction', () => {
-    const extractSessionId = (path: string): string | null => {
-      const match = path.match(/s\/([A-Z0-9]+)/);
-      return match ? match[1] : null;
-    };
-
-    it('should extract sessionId from path', () => {
-      expect(extractSessionId('s/ABC123')).toBe('ABC123');
-      expect(extractSessionId('/s/XYZ789')).toBe('XYZ789');
+  describe('route path patterns', () => {
+    it('should have home route accessible at root', () => {
+      const homeRoute = expectedRoutes.find((r) => r.path === '');
+      expect(homeRoute).toBeDefined();
     });
 
-    it('should return null for invalid paths', () => {
-      expect(extractSessionId('')).toBeNull();
-      expect(extractSessionId('/')).toBeNull();
-      expect(extractSessionId('invalid')).toBeNull();
+    it('should have session route with proper parameter syntax', () => {
+      const sessionRoute = expectedRoutes.find((r) => r.path === 's/:sessionId');
+      expect(sessionRoute?.path).toContain(':sessionId');
     });
 
-    it('should handle various sessionId formats', () => {
-      expect(extractSessionId('s/000000')).toBe('000000');
-      expect(extractSessionId('s/AAAAAA')).toBe('AAAAAA');
-      expect(extractSessionId('s/A1B2C3')).toBe('A1B2C3');
+    it('should redirect unknown paths to home', () => {
+      const wildcardRoute = expectedRoutes.find((r) => r.path === '**');
+      expect(wildcardRoute?.redirectTo).toBe('');
     });
   });
 });

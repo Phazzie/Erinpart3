@@ -1,12 +1,35 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { firstValueFrom, take, timeout } from 'rxjs';
-import { BroadcastChannelBus } from './broadcast-channel.bus';
 import { SyncMessage } from '../../core/ports/sync-bus.provider';
+
+// Mock logger
+const mockLogger = {
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+};
+
+// Mock Angular inject
+vi.mock('@angular/core', async () => {
+  const actual = await vi.importActual('@angular/core');
+  return {
+    ...actual,
+    inject: vi.fn((token: any) => {
+      const tokenName = token?.name || token?.toString() || '';
+      if (tokenName.includes('LoggerService')) return mockLogger;
+      return null;
+    }),
+  };
+});
+
+import { BroadcastChannelBus } from './broadcast-channel.bus';
 
 describe('BroadcastChannelBus', () => {
   let bus: BroadcastChannelBus;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     bus = new BroadcastChannelBus();
   });
 

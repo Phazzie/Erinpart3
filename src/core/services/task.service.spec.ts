@@ -19,6 +19,13 @@ const mockAuthProvider = {
   initialize: vi.fn(),
 };
 
+const mockLogger = {
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+};
+
 // Track signal values for toObservable mock
 let signalSubject: BehaviorSubject<string | null>;
 let tasksStateValue = { loading: true, tasks: [] as Task[], error: null };
@@ -50,6 +57,7 @@ vi.mock('@angular/core', async () => {
       if (tokenName.includes('TaskStore')) return mockTaskStore;
       if (tokenName.includes('SyncBus')) return mockSyncBus;
       if (tokenName.includes('AuthProvider')) return mockAuthProvider;
+      if (tokenName.includes('LoggerService')) return mockLogger;
       return null;
     }),
   };
@@ -159,6 +167,15 @@ describe('TaskService', () => {
       await service.addTask('My task', false);
 
       expect(mockSyncBus.publish).not.toHaveBeenCalled();
+    });
+
+    it('should log error when save fails', async () => {
+      const error = new Error('Save failed');
+      mockTaskStore.save.mockRejectedValueOnce(error);
+
+      await service.addTask('My task', false);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Failed to add task', error);
     });
 
     it('should generate valid UUID for task id', async () => {
@@ -276,6 +293,16 @@ describe('TaskService', () => {
       await service.revealTask(task);
 
       expect(mockSyncBus.publish).not.toHaveBeenCalled();
+    });
+
+    it('should log error when reveal save fails', async () => {
+      const error = new Error('Reveal failed');
+      mockTaskStore.save.mockRejectedValueOnce(error);
+      const task = createTask();
+
+      await service.revealTask(task);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Failed to update task for reveal', error);
     });
   });
 

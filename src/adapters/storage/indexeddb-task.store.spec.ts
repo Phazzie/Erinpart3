@@ -5,6 +5,18 @@ import { Task, TaskSchema } from '../../core/models/task';
 import { SyncBus, SyncMessage } from '../../core/ports/sync-bus.provider';
 import { Observable, Subject } from 'rxjs';
 
+// Shared test helper
+const createValidTask = (overrides?: Partial<Task>): Task => ({
+  id: '550e8400-e29b-41d4-a716-446655440000',
+  sessionId: 'ABC123',
+  content: 'Test task',
+  isSecret: false,
+  revealVotes: 0,
+  voterIds: [],
+  createdAt: new Date().toISOString(),
+  ...overrides,
+});
+
 // Mock SyncBus for testing
 class MockSyncBus implements SyncBus {
   private subject = new Subject<SyncMessage>();
@@ -29,17 +41,6 @@ vi.mock('@angular/core', async () => {
 
 describe('IndexedDbTaskStore', () => {
   let store: IndexedDbTaskStore;
-
-  const createValidTask = (overrides?: Partial<Task>): Task => ({
-    id: '550e8400-e29b-41d4-a716-446655440000',
-    sessionId: 'ABC123',
-    content: 'Test task',
-    isSecret: false,
-    revealVotes: 0,
-    voterIds: [],
-    createdAt: new Date().toISOString(),
-    ...overrides,
-  });
 
   beforeEach(() => {
     store = new IndexedDbTaskStore();
@@ -118,19 +119,8 @@ describe('IndexedDbTaskStore', () => {
   });
 });
 
-// Additional unit tests for TaskSchema validation (contributing to coverage)
+// Additional unit tests for TaskSchema validation
 describe('Task Schema Validation', () => {
-  const createValidTask = (overrides?: Partial<Task>): Task => ({
-    id: '550e8400-e29b-41d4-a716-446655440000',
-    sessionId: 'ABC123',
-    content: 'Test task',
-    isSecret: false,
-    revealVotes: 0,
-    voterIds: [],
-    createdAt: new Date().toISOString(),
-    ...overrides,
-  });
-
   it('should validate task before saving', () => {
     const task = createValidTask();
     expect(() => TaskSchema.parse(task)).not.toThrow();
