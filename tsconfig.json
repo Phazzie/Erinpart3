@@ -11,8 +11,7 @@
     ],
     "skipLibCheck": true,
     "types": [
-      "node",
-      "qrcode"
+      "node"
     ],
     "moduleResolution": "bundler",
     "isolatedModules": true,
@@ -26,8 +25,7 @@
     }
   },
   "files": [
-    "./index.tsx",
-    "./src/types/qrcode.d.ts"
+    "./index.tsx"
   ],
   "angularCompilerOptions": {
     "disableTypeScriptVersionCheck": true

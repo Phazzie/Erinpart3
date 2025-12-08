@@ -10,6 +10,8 @@ import { AuthProvider } from '../../core/ports/auth.provider';
 import { TaskCardComponent } from '../../shared/components/task-card/task-card.component';
 import { TaskService } from '../../core/services/task.service';
 
+declare var QRCode: any;
+
 @Component({
   selector: 'app-session-page',
   templateUrl: './session-page.component.html',
