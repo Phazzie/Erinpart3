@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 
-export const SESSION_ID_PATTERN = /^[A-Z0-9]{6}$/;
-
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
   readonly appName = environment.appName;

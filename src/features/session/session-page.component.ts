@@ -34,18 +34,9 @@ export class SessionPageComponent implements OnDestroy {
 
   @ViewChild('qrCanvas') qrCanvas: ElementRef<HTMLCanvasElement> | undefined;
 
+  // Pure data derivation - just read the route param
   sessionId = toSignal(
-    this.route.paramMap.pipe(
-      map(params => {
-        const id = params.get('sessionId');
-        if (!id || !this.config.session.idPattern.test(id)) {
-          this.logger.warn('Invalid session ID, redirecting to home');
-          this.router.navigate(['/']);
-          return null;
-        }
-        return id;
-      })
-    )
+    this.route.paramMap.pipe(map(params => params.get('sessionId')))
   );
 
   currentUser = this.authProvider.currentUser;
@@ -63,25 +54,24 @@ export class SessionPageComponent implements OnDestroy {
   copyButtonText = signal('Copy Link');
 
   constructor() {
+    // Side-effect: validate session ID and sync with task service
     effect(() => {
-      this.taskService.sessionId.set(this.sessionId() ?? null);
+      const id = this.sessionId();
+      if (!id || !this.config.session.idPattern.test(id)) {
+        if (id !== null && id !== undefined) {
+          this.logger.warn('Invalid session ID, redirecting to home');
+          this.router.navigate(['/']);
+        }
+        this.taskService.sessionId.set(null);
+      } else {
+        this.taskService.sessionId.set(id);
+      }
     });
 
+    // Side-effect: render QR code when modal opens
     effect(() => {
       if (this.isShareModalOpen() && this.qrCanvas?.nativeElement && this.sessionId()) {
-        try {
-          const qrConfig = this.config.qrCode;
-          QRCode.toCanvas(this.qrCanvas.nativeElement, this.sessionUrl(), {
-            width: qrConfig.width,
-            margin: qrConfig.margin,
-            color: {
-              dark: qrConfig.colorDark,
-              light: qrConfig.colorLight
-            }
-          });
-        } catch (error) {
-          this.logger.error('Failed to generate QR code', error);
-        }
+        this.renderQrCode();
       }
     });
   }
@@ -93,21 +83,17 @@ export class SessionPageComponent implements OnDestroy {
   }
 
   async addTask(): Promise<void> {
-    try {
+    await this.runWithErrorHandling('Failed to add task', async () => {
       await this.taskService.addTask(this.newTaskContent(), this.isNewTaskSecret());
       this.newTaskContent.set('');
       this.isNewTaskSecret.set(false);
-    } catch (error) {
-      this.logger.error('Failed to add task', error);
-    }
+    });
   }
 
   async handleReveal(task: Task): Promise<void> {
-    try {
-      await this.taskService.revealTask(task);
-    } catch (error) {
-      this.logger.error('Failed to reveal task', error);
-    }
+    await this.runWithErrorHandling('Failed to reveal task', () =>
+      this.taskService.revealTask(task)
+    );
   }
 
   toggleShareModal(): void {
@@ -120,15 +106,48 @@ export class SessionPageComponent implements OnDestroy {
   copyLink(): void {
     this.clipboard.writeText(this.sessionUrl()).then(() => {
       this.copyButtonText.set('Copied!');
-      if (this.copyTimeoutId) {
-        clearTimeout(this.copyTimeoutId);
-      }
-      this.copyTimeoutId = setTimeout(() => {
-        this.copyButtonText.set('Copy Link');
-        this.copyTimeoutId = null;
-      }, this.config.ui.copyFeedbackDuration);
+      this.scheduleCopyReset();
     }).catch(err => {
       this.logger.error('Failed to copy to clipboard', err);
     });
+  }
+
+  // --- Private helpers ---
+
+  private async runWithErrorHandling<T>(
+    errorMessage: string,
+    fn: () => Promise<T>
+  ): Promise<T | void> {
+    try {
+      return await fn();
+    } catch (error) {
+      this.logger.error(errorMessage, error);
+    }
+  }
+
+  private scheduleCopyReset(): void {
+    if (this.copyTimeoutId) {
+      clearTimeout(this.copyTimeoutId);
+    }
+    this.copyTimeoutId = setTimeout(() => {
+      this.copyButtonText.set('Copy Link');
+      this.copyTimeoutId = null;
+    }, this.config.ui.copyFeedbackDuration);
+  }
+
+  private renderQrCode(): void {
+    try {
+      const qrConfig = this.config.qrCode;
+      QRCode.toCanvas(this.qrCanvas!.nativeElement, this.sessionUrl(), {
+        width: qrConfig.width,
+        margin: qrConfig.margin,
+        color: {
+          dark: qrConfig.colorDark,
+          light: qrConfig.colorLight
+        }
+      });
+    } catch (error) {
+      this.logger.error('Failed to generate QR code', error);
+    }
   }
 }

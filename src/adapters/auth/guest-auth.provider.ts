@@ -43,8 +43,15 @@ export class GuestAuthProvider implements AuthProvider {
       }
     } catch (e) {
       this.logger.error('Failed to initialize guest auth', e);
-      const fallbackUser: User = { id: crypto.randomUUID(), name: 'Guest' };
-      this.currentUser.set(fallbackUser);
+
+      // Clear potentially invalid stored user and create a fresh, persisted guest user
+      try {
+        this.storage.removeItem(GUEST_USER_KEY);
+      } catch (storageError) {
+        this.logger.warn('Failed to clear invalid guest user from storage', storageError);
+      }
+
+      this.createAndStoreNewUser();
     }
   }
 
