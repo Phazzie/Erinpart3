@@ -1,10 +1,15 @@
-import { Injectable, signal, WritableSignal } from '@angular/core';
+import { Injectable, signal, WritableSignal, inject } from '@angular/core';
 import { AuthProvider, User } from '../../core/ports/auth.provider';
+import { StorageProvider } from '../../core/ports/storage.provider';
+import { LoggerService } from '../../core/services/logger.service';
 
 const GUEST_USER_KEY = 'erins-escapades-guest-user';
 
 @Injectable({ providedIn: 'root' })
 export class GuestAuthProvider implements AuthProvider {
+  private storage = inject(StorageProvider);
+  private logger = inject(LoggerService);
+
   currentUser: WritableSignal<User | null> = signal(null);
 
   constructor() {
@@ -13,7 +18,7 @@ export class GuestAuthProvider implements AuthProvider {
 
   initialize(): void {
     try {
-      const storedUser = localStorage.getItem(GUEST_USER_KEY);
+      const storedUser = this.storage.getItem(GUEST_USER_KEY);
       if (storedUser) {
         this.currentUser.set(JSON.parse(storedUser));
       } else {
@@ -21,12 +26,11 @@ export class GuestAuthProvider implements AuthProvider {
           id: crypto.randomUUID(),
           name: 'Guest',
         };
-        localStorage.setItem(GUEST_USER_KEY, JSON.stringify(newUser));
+        this.storage.setItem(GUEST_USER_KEY, JSON.stringify(newUser));
         this.currentUser.set(newUser);
       }
     } catch (e) {
-      console.error('Failed to initialize guest auth:', e);
-      // Fallback for environments where localStorage is not available
+      this.logger.error('Failed to initialize guest auth', e);
       const fallbackUser: User = { id: crypto.randomUUID(), name: 'Guest' };
       this.currentUser.set(fallbackUser);
     }

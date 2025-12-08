@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ConfigService } from '../../core/services/config.service';
 
 @Component({
   selector: 'app-home-page',
@@ -10,11 +11,12 @@ import { CommonModule } from '@angular/common';
   imports: [FormsModule, CommonModule],
 })
 export class HomePageComponent {
+  private router = inject(Router);
+  private config = inject(ConfigService);
+
   sessionId = signal('');
 
-  isSessionIdValid = computed(() => /^[A-Z0-9]{6}$/.test(this.sessionId()));
-
-  constructor(private router: Router) {}
+  isSessionIdValid = computed(() => this.config.session.idPattern.test(this.sessionId()));
 
   joinSession() {
     if (this.sessionId().trim().length > 0) {
@@ -23,7 +25,7 @@ export class HomePageComponent {
   }
 
   createNewSession() {
-    const newId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const newId = crypto.randomUUID().substring(0, this.config.session.idLength).toUpperCase();
     this.router.navigate(['/s', newId]);
   }
 }
