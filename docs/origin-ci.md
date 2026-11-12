@@ -31,7 +31,7 @@ These stay out of Depot:
 
 - **Artifact upload.** `actions/upload-artifact@v4` kept a `dist` artifact for 7 days. Depot still runs the production build, and a failed build fails `verify`. It does not upload `dist/`.
 - **The GitHub-hosted runner.** `ubuntu-latest` is replaced by `depot-ubuntu-24.04`.
-- **Vercel deploys triggered by GitHub.** `vercel.json` sets the build command to `npm run build`, the framework to Angular, and the output directory to `dist/erin's-escapades/browser`. There is no deploy workflow under `.github/workflows/`. Vercel ships from its GitHub connection. Detaching the repository from GitHub stops those deploys. Depot CI does not deploy. Reconnect the Vercel project to the replacement remote, or deploy with the Vercel CLI. Project environment variables stay in Vercel. The Angular build writes to `dist/` (`angular.json` sets the browser output to `.` under `./dist`). `vercel.json` still points at `dist/erin's-escapades/browser`, which this build does not create. That mismatch is already in the tree and is left as-is.
+- **Vercel deploys triggered by GitHub.** `vercel.json` sets the build command to `npm run build`, the framework to Angular, and the output directory to `dist`. That is the directory `npm run build:prod` writes: `angular.json` sets the browser output to `.` under `./dist`, and the production build places `index.html` directly in `dist/`. There is no deploy workflow under `.github/workflows/`. Vercel ships from its GitHub connection. Detaching the repository from GitHub stops those deploys. Depot CI does not deploy. Reconnect the Vercel project to the replacement remote, or deploy with the Vercel CLI. Project environment variables stay in Vercel.
 
 ## Secrets to enter in Depot
 
